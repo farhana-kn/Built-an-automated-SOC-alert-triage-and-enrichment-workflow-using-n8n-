@@ -1,0 +1,475 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "soc-alert",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -160,
+        -160
+      ],
+      "id": "2ddf2cb0-7fa7-4c96-9ea0-45bd3fbebc1f",
+      "name": "Webhook",
+      "webhookId": "d93d66e4-5553-4628-b4f6-e90b5e0d4c94"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8a9cb993-78ca-4f75-9de1-b5071f9543eb",
+              "name": "=alert_name",
+              "value": "={{$json[\"body\"][\"alert_name\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "bc7cb15a-301b-4992-9339-27cee3b40f4c",
+              "name": "severity",
+              "value": "={{$json[\"body\"][\"severity\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "a21d4337-8b59-4d3b-b5fd-ac08b25e521c",
+              "name": "source_ip",
+              "value": "={{$json[\"body\"][\"source_ip\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "6b5de8f8-9b65-410c-8c0f-41c6be896f8e",
+              "name": "alert_name1",
+              "value": "Correct Login",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        48,
+        -80
+      ],
+      "id": "c872071e-ef82-4bd8-b10d-8cf91b04ca0d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cedbe7d6-c592-485f-82b9-1e7836dc35f8",
+              "leftValue": "={{ $('Edit Fields').item.json.severity }}",
+              "rightValue": "High",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "78301faa-4091-4c42-9f2a-64937d5aedae",
+              "leftValue": "={{ $('Edit Fields').item.json.source_ip }}",
+              "rightValue": "8.8.8.8",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "41449bab-09ff-4ec9-b532-ba96a2d5c8aa",
+              "leftValue": "={{$json.risk_score}}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "526dd687-09f7-4678-974c-e931e3387b77",
+              "leftValue": "={{ $('Edit Fields').item.json.alert_name }}",
+              "rightValue": "Failed Login",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        656,
+        -16
+      ],
+      "id": "d48fcf30-96b3-461b-a21e-462f2e1363b5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "=http://ip-api.com/json/{{$json[\"source_ip\"]}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        -32
+      ],
+      "id": "bb17d491-4503-4bad-81cc-d9fd0b1f6e1a",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "sendTo": "24m044@nssce.ac.in",
+        "subject": "=No Severity Alert",
+        "message": "={{ $('Edit Fields').item.json.alert_name1 }}\n\nSeverity: {{$node[\"Edit Fields\"].json[\"severity\"]}}\n\nSource IP: {{$node[\"Edit Fields\"].json[\"source_ip\"]}}\n\nCountry: {{$json[\"body\"][\"country\"]}}\n\nCity: {{$json[\"body\"][\"city\"]}}\n\nISP: {{$json[\"body\"][\"isp\"]}}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        -208
+      ],
+      "id": "02a81b48-dd93-40b3-99ae-16f6449c8870",
+      "name": "Send a message",
+      "webhookId": "02a1598f-7d60-4071-9b8a-7917167c3e0c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ic1ciCj6Gkf0gksL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f010f8b0-88d3-4375-b673-b49e54d4d31d",
+              "name": "risk_score",
+              "value": "={{ ($json.severity === \"High\" ? 50 : 20) + ($json.country === \"United States\" ? 10 : 30) }}",
+              "type": "number"
+            },
+            {
+              "id": "3dd8a9c8-9130-461c-b5e2-63427647582e",
+              "name": "alert_name1",
+              "value": "Correct Login",
+              "type": "string"
+            },
+            {
+              "id": "da5b602e-e867-4ff7-8232-d0d7fb33551d",
+              "name": "alert_name",
+              "value": "Failed Login",
+              "type": "string"
+            },
+            {
+              "id": "cf72a6f1-244f-4217-814c-93d7a550c599",
+              "name": "severity",
+              "value": "High",
+              "type": "string"
+            },
+            {
+              "id": "9ab0e09d-05f8-4e59-a2f8-25409c915fae",
+              "name": "source_ip",
+              "value": "8.8.8.8",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        -16
+      ],
+      "id": "7b201b80-fbd5-469d-babe-fb653a46fbdd",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "sendTo": "24m044@nssce.ac.in",
+        "subject": "=SOC Alert - {{$jso$('Edit Fields').item.json.alert_namen.alert_name}}",
+        "message": "={{ $('Edit Fields').item.json.alert_name }}{{ $('Edit Fields').item.json.severity }}{{ $('Edit Fields').item.json.source_ip }}{{ $('Edit Fields1').item.json.risk_score }}{{ $('HTTP Request').item.json.body.country }}{{ $('HTTP Request').item.json.body.city }}{{ $('HTTP Request').item.json.body.isp }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        176
+      ],
+      "id": "3a013d8a-a749-4e55-ad91-8ca7d8ae3942",
+      "name": "Send a message1",
+      "webhookId": "f683ac73-1bf5-4736-8007-5648dbcd1f06",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ic1ciCj6Gkf0gksL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1SHXXvZSKAMrsldsvwARnJHXqeI5fwhb5UQon_mkzIRo",
+          "mode": "list",
+          "cachedResultName": "SOC_Alert_Logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SHXXvZSKAMrsldsvwARnJHXqeI5fwhb5UQon_mkzIRo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SHXXvZSKAMrsldsvwARnJHXqeI5fwhb5UQon_mkzIRo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "risk_score": "={{ $json.risk_score }}",
+            "alert_name": "={{ $('Edit Fields').item.json.alert_name }}{{ $('Edit Fields').item.json.alert_name1 }}",
+            "severity": "={{ $('Edit Fields').item.json.severity }}",
+            "source_ip": "={{ $('Edit Fields').item.json.source_ip }}",
+            "country": "={{ $('HTTP Request').item.json.body.country }}",
+            "city": "={{ $('HTTP Request').item.json.body.city }}",
+            "isp": "={{ $('HTTP Request').item.json.body.isp }}",
+            "timestamp": "={{ $('HTTP Request').item.json.body.timezone }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "alert_name",
+              "displayName": "alert_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "severity",
+              "displayName": "severity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_ip",
+              "displayName": "source_ip",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "isp",
+              "displayName": "isp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "risk_score",
+              "displayName": "risk_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1088,
+        -32
+      ],
+      "id": "577abc2d-50e8-42bf-b7f1-72135de624af",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "qLfa4yeOoYTkWmeF",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "4172ef4d-cdd6-4dea-ae31-5ff1b2e75d42",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "da4228a8cb8d991ad08145ed73f8c994b69f2a6ea0b4b8230223857f165a5a5d"
+  },
+  "id": "uslW7rVbS3l6KQHe",
+  "tags": []
+}
